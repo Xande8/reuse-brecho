@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo — ReUse Brechó</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script>
+</head>
+<body>
+<header><div class="headrow">
+  <a class="brand" href="index.html"><img src="assets/logo.png" alt="Logo ReUse Brechó"><span>ReUse Brechó</span></a>
+  <div class="search-wrap"><input id="searchInput" type="search" maxlength="80" placeholder="Procurar peça, cor, marca..." autocomplete="off"></div>
+  <div class="head-actions"><button class="icon-btn" id="favToggle" type="button" aria-label="Mostrar favoritos">♡<span class="icon-count" id="favCount">0</span></button><button class="cart-btn" id="openCart" type="button">🛍️ Carrinho <span class="cart-count" id="cartCount">0</span></button></div>
+</div></header>
+<main>
+<section class="hero"><span class="tag">Peças disponíveis · João Pessoa</span><h1>Escolha sua próxima história.</h1><p>Peças selecionadas do ReUse. Consulte detalhes, salve favoritas e monte seu pedido sem pagamento pelo site.</p></section>
+<div class="section-title"><h2>Catálogo</h2><span class="count" id="resultCount">Carregando…</span></div>
+<div class="catalog-wrap">
+  <aside class="filters"><div class="catalog-top"><h3>Filtros</h3><button class="clear-btn" id="clearFilters">Limpar</button></div><div class="filter-group"><strong>Categorias</strong><div id="categoryFilters"></div></div><div class="filter-group"><strong>Tamanho</strong><div id="sizeFilters"></div></div><div class="filter-group"><strong>Cor</strong><div id="colorFilters"></div></div></aside>
+  <section><div class="catalog-top"><span class="muted" id="filterSummary"></span><select id="sortSelect" aria-label="Ordenação"><option value="recent">Mais recentes</option><option value="priceAsc">Menor preço</option><option value="priceDesc">Maior preço</option><option value="name">Nome A-Z</option></select></div><div class="grid" id="productGrid"></div><div class="empty" id="emptyState" hidden>Nenhuma peça encontrada com esses filtros.</div></section>
+</div>
+</main>
+<footer><div class="foot-inner"><div class="foot-cols"><div class="foot-col"><h4>ReUse</h4><a href="index.html">Início</a><a href="https://www.instagram.com/reusebrecho_jp" target="_blank" rel="noopener noreferrer">Instagram</a></div><div class="foot-col"><h4>Atendimento</h4><p>João Pessoa e Grande João Pessoa</p><a href="https://wa.me/5583996673950" target="_blank" rel="noopener noreferrer">WhatsApp</a></div><div class="foot-col"><h4>Pagamento</h4><p>PIX · dinheiro · débito · crédito</p></div><div class="foot-col"><h4>Compra</h4><p>Pagamento combinado pelo WhatsApp, não pelo site.</p></div></div><p class="foot-word">reuse</p><p class="foot-note">Moda que renasce, estilo que permanece.</p></div></footer>
+<a class="fab" href="https://wa.me/5583996673950" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">💬</a>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-label="Carrinho">
+  <div class="drawer-head"><h3>Seu pedido</h3><button class="close-btn" id="closeCart" type="button">×</button></div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="drawer-foot">
+    <div class="field"><label for="customerName">Nome</label><input id="customerName" maxlength="100" autocomplete="name" placeholder="Seu nome"></div>
+    <div class="field"><label for="customerWhatsapp">WhatsApp</label><input id="customerWhatsapp" maxlength="25" inputmode="tel" autocomplete="tel" placeholder="(83) 99999-9999"></div>
+    <div class="field"><label>Como pretende pagar?</label><div class="pay-opts" id="payOpts"><button class="pay-opt active" data-pay="pix" type="button">PIX</button><button class="pay-opt" data-pay="dinheiro" type="button">Dinheiro</button><button class="pay-opt" data-pay="debito" type="button">Débito</button><button class="pay-opt" data-pay="credito" type="button">Crédito</button></div></div>
+    <div class="total-row"><span>Total calculado após validação</span><strong id="cartTotal">R$ 0,00</strong></div>
+    <button class="primary-btn" id="reviewBtn" type="button">Revisar pedido</button><div class="message" id="cartMessage"></div>
+  </div>
+</aside>
+
+<div class="modal" id="productModal"><div class="modal-card"><button class="modal-close" id="closeProduct" type="button">×</button><div class="detail-grid"><div><div class="detail-main"><img id="detailMainImage" src="" alt=""></div><div class="thumbs" id="detailThumbs"></div></div><div class="detail-info"><h2 id="detailName"></h2><div class="detail-price" id="detailPrice"></div><p class="meta" id="detailDescription"></p><div class="detail-list" id="detailList"></div><button class="primary-btn" id="detailAdd" type="button">Adicionar ao carrinho</button><div class="message" id="detailMessage"></div></div></div></div></div>
+
+<div class="modal" id="confirmModal"><div class="modal-card" style="max-width:520px"><button class="modal-close" id="closeConfirm" type="button">×</button><div class="confirm-box"><h3>Confirmar pedido?</h3><p class="muted">Confira os dados antes de continuar. Ao confirmar, o sistema valida o estoque e reserva as peças disponíveis.</p><div id="confirmSummary"></div><div class="confirm-actions"><button class="secondary-btn" id="backConfirm" type="button">Voltar</button><button class="primary-btn" id="confirmOrder" type="button">Confirmar e ir para WhatsApp</button></div><div class="message" id="confirmMessage"></div></div></div></div>
+
+<script>
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const WA = REUSE_WHATSAPP;
+const CART_KEY='reuse_cart_v4'; const FAV_KEY='reuse_favs_v4';
+let products=[]; let categories=[]; let cart=loadJSON(CART_KEY,[]); let favorites=loadJSON(FAV_KEY,[]); let payment='pix'; let onlyFavorites=false; let currentProduct=null; let currentImage=0;
+const $=id=>document.getElementById(id);
+function loadJSON(key,fallback){try{const x=JSON.parse(localStorage.getItem(key)||'null');return Array.isArray(x)?x:fallback}catch{return fallback}}
+function save(){localStorage.setItem(CART_KEY,JSON.stringify(cart));localStorage.setItem(FAV_KEY,JSON.stringify(favorites));updateCounts()}
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function esc(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function normalize(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
+function updateCounts(){$('cartCount').textContent=cart.reduce((n,i)=>n+i.qty,0);$('favCount').textContent=favorites.length}
+async function load(){
+  const [{data:cats,error:ce},{data:ps,error:pe}]=await Promise.all([
+    sb.from('categories').select('id,name,slug').order('name'),
+    sb.from('products').select('id,name,category_id,brand,color,price,size,state,material,measurements,description,observations,stock_quantity,images,created_at').eq('status','disponivel').gt('stock_quantity',0).order('created_at',{ascending:false})
+  ]);
+  if(ce||pe){$('productGrid').textContent='Não foi possível carregar o catálogo agora.';return}
+  categories=cats||[]; products=ps||[]; reconcileCart(); renderFilters(); render();
+}
+function reconcileCart(){cart=cart.filter(i=>products.some(p=>p.id===i.id));cart.forEach(i=>{const p=products.find(x=>x.id===i.id);i.qty=Math.min(Math.max(1,i.qty),p.stock_quantity)});save()}
+function renderFilters(){
+  $('categoryFilters').replaceChildren(...categories.map(c=>labelCheck('cat',c.id,c.name)));
+  const sizes=[...new Set(products.map(p=>p.size).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true}));
+  const colors=[...new Set(products.map(p=>p.color).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR'));
+  $('sizeFilters').replaceChildren(...sizes.map(x=>labelCheck('size',x,x))); $('colorFilters').replaceChildren(...colors.map(x=>labelCheck('color',x,x)));
+  document.querySelectorAll('.filter-option input').forEach(x=>x.addEventListener('change',render));
+}
+function labelCheck(type,value,text){const l=document.createElement('label');l.className='filter-option';const i=document.createElement('input');i.type='checkbox';i.dataset.type=type;i.value=value;const s=document.createElement('span');s.textContent=text;l.append(i,s);return l}
+function selected(type){return [...document.querySelectorAll(`input[data-type="${type}"]:checked`)].map(x=>x.value)}
+function render(){
+  const q=normalize($('searchInput').value);const cats=selected('cat'),sizes=selected('size'),colors=selected('color');
+  let list=products.filter(p=>!onlyFavorites||favorites.includes(p.id)).filter(p=>!q||normalize([p.name,p.brand,p.color,p.size,p.material].join(' ')).includes(q)).filter(p=>!cats.length||cats.includes(p.category_id)).filter(p=>!sizes.length||sizes.includes(p.size)).filter(p=>!colors.length||colors.includes(p.color));
+  const sort=$('sortSelect').value;if(sort==='priceAsc')list.sort((a,b)=>a.price-b.price);if(sort==='priceDesc')list.sort((a,b)=>b.price-a.price);if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+  $('resultCount').textContent=`${list.length} ${list.length===1?'peça':'peças'}`;$('filterSummary').textContent=onlyFavorites?'Favoritos':'Peças disponíveis';$('emptyState').hidden=!!list.length;
+  const grid=$('productGrid');grid.replaceChildren(...list.map(productCard));
+}
+function productCard(p){
+  const card=document.createElement('article');card.className='card';const image=document.createElement('div');image.className='product-image';image.addEventListener('click',()=>openProduct(p.id));
+  const img=document.createElement('img');img.src=p.images?.[0]||'logo.png';img.alt=p.name;img.loading='lazy';image.appendChild(img);
+  const fav=document.createElement('button');fav.type='button';fav.className='fav-heart'+(favorites.includes(p.id)?' active':'');fav.textContent=favorites.includes(p.id)?'♥':'♡';fav.setAttribute('aria-label','Favoritar');fav.addEventListener('click',e=>{e.stopPropagation();toggleFav(p.id)});image.appendChild(fav);card.appendChild(image);
+  const body=document.createElement('div');body.className='product-body';const h=document.createElement('h3');h.textContent=p.name;body.appendChild(h);const meta=document.createElement('div');meta.className='meta';meta.textContent=[p.brand,p.color,p.size].filter(Boolean).join(' · ')||'Peça selecionada';body.appendChild(meta);const row=document.createElement('div');row.className='price-row';const price=document.createElement('span');price.className='price';price.textContent=money(p.price);row.appendChild(price);const add=document.createElement('button');add.className='add-btn';add.type='button';add.textContent='+';add.disabled=p.stock_quantity<1;add.setAttribute('aria-label','Adicionar ao carrinho');add.addEventListener('click',e=>{e.stopPropagation();addToCart(p.id)});row.appendChild(add);body.appendChild(row);card.appendChild(body);return card;
+}
+function toggleFav(id){favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];save();render()}
+function addToCart(id){const p=products.find(x=>x.id===id);if(!p||p.stock_quantity<1)return;const item=cart.find(x=>x.id===id);if(item){if(item.qty>=p.stock_quantity){showMessage('cartMessage','Você já adicionou todo o estoque disponível.');return}item.qty++}else cart.push({id,qty:1});save();renderCart();openCart()}
+function changeQty(id,delta){const item=cart.find(x=>x.id===id);const p=products.find(x=>x.id===id);if(!item||!p)return;item.qty=Math.min(p.stock_quantity,Math.max(1,item.qty+delta));save();renderCart()}
+function removeCart(id){cart=cart.filter(x=>x.id!==id);save();renderCart()}
+function cartDetails(){return cart.map(i=>{const p=products.find(x=>x.id===i.id);return p?{...p,qty:i.qty,subtotal:p.price*i.qty}:null}).filter(Boolean)}
+function renderCart(){const items=cartDetails();const el=$('cartItems');if(!items.length){el.innerHTML='<div class="cart-empty">Seu carrinho está vazio.<br><br>Escolha uma peça no catálogo.</div>';$('reviewBtn').disabled=true;$('cartTotal').textContent=money(0);return}el.replaceChildren(...items.map(i=>{const row=document.createElement('div');row.className='cart-item';const im=document.createElement('img');im.src=i.images?.[0]||'logo.png';im.alt=i.name;row.appendChild(im);const info=document.createElement('div');info.className='ci-info';const strong=document.createElement('strong');strong.textContent=i.name;info.appendChild(strong);const small=document.createElement('small');small.textContent=`${money(i.price)} · estoque ${i.stock_quantity}`;info.appendChild(small);const q=document.createElement('div');q.className='qty-controls';const minus=document.createElement('button');minus.textContent='−';minus.type='button';minus.onclick=()=>changeQty(i.id,-1);const num=document.createElement('span');num.textContent=i.qty;const plus=document.createElement('button');plus.textContent='+';plus.type='button';plus.disabled=i.qty>=i.stock_quantity;plus.onclick=()=>changeQty(i.id,1);q.append(minus,num,plus);info.appendChild(q);const rem=document.createElement('button');rem.className='remove-btn';rem.textContent='Remover';rem.type='button';rem.onclick=()=>removeCart(i.id);info.appendChild(rem);row.appendChild(info);return row}));$('cartTotal').textContent=money(items.reduce((s,i)=>s+i.subtotal,0));$('reviewBtn').disabled=false}
+function openCart(){renderCart();$('overlay').classList.add('open');$('drawer').classList.add('open')};function closeCart(){$('overlay').classList.remove('open');$('drawer').classList.remove('open')}
+function showMessage(id,msg,ok=false){const el=$(id);el.textContent=msg;el.className='message'+(ok?' ok':'')}
+function setPayment(p){payment=p;document.querySelectorAll('.pay-opt').forEach(b=>b.classList.toggle('active',b.dataset.pay===p))}
+function validateCustomer(){const name=$('customerName').value.trim();const phone=$('customerWhatsapp').value.trim();if(name.length<2||name.length>100){showMessage('cartMessage','Informe um nome válido.');return false}const digits=phone.replace(/\D/g,'');if(digits.length<8||digits.length>15){showMessage('cartMessage','Informe um WhatsApp válido.');return false}showMessage('cartMessage','');return true}
+function review(){if(!cart.length)return;if(!validateCustomer())return;const items=cartDetails();const box=$('confirmSummary');box.replaceChildren();items.forEach(i=>{const p=document.createElement('p');p.textContent=`${i.qty}× ${i.name} — ${money(i.subtotal)}`;box.appendChild(p)});const total=document.createElement('strong');total.textContent=`Total: ${money(items.reduce((s,i)=>s+i.subtotal,0))}`;box.appendChild(total);const pay=document.createElement('p');pay.textContent=`Pagamento: ${labelPay(payment)}`;box.appendChild(pay);showMessage('confirmMessage','');$('confirmModal').classList.add('open')}
+function labelPay(p){return {pix:'PIX',dinheiro:'Dinheiro',debito:'Cartão de débito',credito:'Cartão de crédito'}[p]||p}
+async function confirmOrder(){
+  if(!validateCustomer()){$('confirmModal').classList.remove('open');openCart();return}
+  const btn=$('confirmOrder');btn.disabled=true;showMessage('confirmMessage','Validando disponibilidade e reservando as peças…');
+  const rpcItems=cart.map(i=>({product_id:i.id,quantity:i.qty}));
+  const {data,error}=await sb.rpc('create_order',{p_items:rpcItems,p_payment_method:payment,p_customer_name:$('customerName').value.trim(),p_customer_whatsapp:$('customerWhatsapp').value.trim()});
+  if(error||!data){console.error(error);showMessage('confirmMessage','Não foi possível registrar o pedido. Tente novamente em instantes.');btn.disabled=false;return}
+  const confirmed=data.confirmed||[];const unavailable=data.unavailable||[];
+  if(!confirmed.length){showMessage('confirmMessage','As peças ficaram indisponíveis antes da confirmação. Atualize o catálogo e tente novamente.');btn.disabled=false;await load();return}
+  const confirmedIds=new Set(confirmed.map(i=>i.product_id));cart=cart.filter(i=>!confirmedIds.has(i.id));save();
+  let msg=`🧡 *Novo pedido — ReUse Brechó*\n\nPedido: #${data.order_number}\nCliente: ${$('customerName').value.trim()}\nWhatsApp: ${$('customerWhatsapp').value.trim()}\n\n`;
+  confirmed.forEach(i=>msg+=`• ${i.name} x${i.quantity} — ${money(i.subtotal)}\n`);
+  msg+=`\n*Total: ${money(data.total)}*\nPagamento escolhido: ${labelPay(payment)}\n\nAguardo a confirmação da disponibilidade e a combinação de entrega/retirada.`;
+  if(unavailable.length){msg+=`\n\n⚠️ Itens que ficaram indisponíveis:\n`;unavailable.forEach(i=>msg+=`• ${i.name}\n`)}
+  const url=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
+  btn.disabled=false;$('confirmModal').classList.remove('open');closeCart();await load();window.location.href=url;
+}
+function openProduct(id){const p=products.find(x=>x.id===id);if(!p)return;currentProduct=p;currentImage=0;renderProductModal();$('productModal').classList.add('open')}
+function renderProductModal(){const p=currentProduct;$('detailName').textContent=p.name;$('detailPrice').textContent=money(p.price);$('detailDescription').textContent=p.description||'Peça selecionada pelo ReUse.';$('detailMainImage').src=p.images?.[currentImage]||'logo.png';$('detailMainImage').alt=p.name;const list=[['Marca',p.brand],['Cor',p.color],['Tamanho',p.size],['Estado',p.state],['Material',p.material],['Medidas',p.measurements],['Observações',p.observations]];const dl=$('detailList');dl.replaceChildren(...list.filter(x=>x[1]).map(x=>{const d=document.createElement('div');const s=document.createElement('small');s.textContent=x[0];const b=document.createElement('strong');b.textContent=x[1];d.append(s,b);return d}));const th=$('detailThumbs');th.replaceChildren(...(p.images||[]).slice(0,3).map((src,i)=>{const b=document.createElement('button');b.type='button';b.className=i===currentImage?'active':'';const im=document.createElement('img');im.src=src;im.alt=`Foto ${i+1}`;b.appendChild(im);b.onclick=()=>{currentImage=i;renderProductModal()};return b}));$('detailAdd').disabled=p.stock_quantity<1;showMessage('detailMessage',p.stock_quantity>0?`Disponíveis: ${p.stock_quantity}`:'Indisponível')}
+function closeProduct(){$('productModal').classList.remove('open')}
+$('searchInput').addEventListener('input',render);$('sortSelect').addEventListener('change',render);$('clearFilters').onclick=()=>{document.querySelectorAll('.filter-option input').forEach(x=>x.checked=false);$('searchInput').value='';onlyFavorites=false;render()};$('favToggle').onclick=()=>{onlyFavorites=!onlyFavorites;$('favToggle').classList.toggle('active',onlyFavorites);render()};$('openCart').onclick=openCart;$('closeCart').onclick=closeCart;$('overlay').onclick=closeCart;$('reviewBtn').onclick=review;$('closeProduct').onclick=closeProduct;$('detailAdd').onclick=()=>{if(currentProduct){addToCart(currentProduct.id);closeProduct()}};$('closeConfirm').onclick=()=>$('confirmModal').classList.remove('open');$('backConfirm').onclick=()=>$('confirmModal').classList.remove('open');$('confirmOrder').onclick=confirmOrder;document.querySelectorAll('.pay-opt').forEach(b=>b.onclick=()=>setPayment(b.dataset.pay));
+updateCounts();load();
+</script>
+</body></html>
