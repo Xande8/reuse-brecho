@@ -1,0 +1,4 @@
+const SUPABASE_URL = "https://mvxwmqlluyyvefgqhpky.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12eHdtcWxsdXl5dmVmZ3FocGt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzEwNTksImV4cCI6MjEwNjA0NzA1OX0.it_VpMMhnAELPzC_USlnRZx6NxlwXVJYYzkeV0xbMII";
+
+const REUSE_WHATSAPP = "5583996673950";
